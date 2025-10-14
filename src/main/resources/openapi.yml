@@ -39,7 +39,7 @@ paths:
               usuario_normal:
                 summary: Usuario normal
                 value:
-                  email: "user"
+                  email: "tuemail@gmail.com"
                   password: "user123"
       responses:
         '200':
@@ -49,11 +49,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
-          description: Credenciales inválidas
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/InvalidCredentialsError'
         '400':
           description: Solicitud inválida
           content:
@@ -79,7 +75,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TareaResponse'
-        '401':
+        '403':
           $ref: '#/components/responses/UnauthorizedError'
 
     post:
@@ -107,7 +103,6 @@ paths:
                 summary: Tarea con fecha de vencimiento
                 value:
                   titulo: "Revisar código"
-                  descripcion: "Code review del módulo de seguridad"
                   estadoId: 1
                   fechaVencimiento: "2025-10-20"
       responses:
@@ -119,7 +114,7 @@ paths:
                 $ref: '#/components/schemas/TareaResponse'
         '400':
           $ref: '#/components/responses/BadRequestError'
-        '401':
+        '403':
           $ref: '#/components/responses/UnauthorizedError'
 
   /tareas/{id}:
@@ -149,7 +144,7 @@ paths:
                 $ref: '#/components/schemas/TareaResponse'
         '404':
           $ref: '#/components/responses/NotFoundError'
-        '401':
+        '403':
           $ref: '#/components/responses/UnauthorizedError'
 
     put:
@@ -220,7 +215,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Token JWT obtenido del endpoint /auth/login
+      description: | 
+        Token JWT obtenido del endpoint /auth/login.
+        Ejemplo: Bearer eyJhbGciOiJIUzUxMiJ9...
 
   schemas:
     LoginRequest:
@@ -245,9 +242,6 @@ components:
 
     LoginResponse:
       type: object
-      required:
-        - token
-        - tipo
       properties:
         token:
           type: string
@@ -257,12 +251,35 @@ components:
           type: string
           description: Tipo de token
           example: "Bearer"
+        usuario:
+          $ref: "#/components/schemas/UsuarioResponse"
+
+
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Identificador único del usuario
+          example: 1
+        email:
+          type: string
+          description: Correo del usuario
+          example: "bastianleond@gmail.com"
+        nombre:
+          type: string
+          description: Nombre del usuario
+          example: "Bastián"
+        apellido:
+          type: string
+          description: Apellido del usuario
+          example: "León"
 
     TareaRequest:
       type: object
       required:
         - titulo
-        - descripcion
         - estadoId
       properties:
         titulo:
@@ -275,7 +292,7 @@ components:
           type: string
           minLength: 5
           maxLength: 500
-          description: Descripción detallada de la tarea
+          description: Descripción detallada de la tarea (opcional)
           example: "Crear el archivo openapi.yml y configurar el plugin de generación de código"
         estadoId:
           type: integer
@@ -303,9 +320,14 @@ components:
         descripcion:
           type: string
           description: Descripción de la tarea
-          example: "Crear el archivo openapi.yml y configurar el plugin de generación de código"
+          example: "Crear el archivo openapi.yml y configurar el plugin de generación de código en pom.xml"
         estado:
           $ref: '#/components/schemas/EstadoResponse'
+        usuarioId:
+          type: integer
+          format: int64
+          description: ID del usuario propietario de la tarea
+          example: 1
         fechaCreacion:
           type: string
           format: date-time
@@ -316,11 +338,11 @@ components:
           format: date
           description: Fecha de vencimiento de la tarea
           example: "2025-10-20"
-        usuarioId:
-          type: integer
-          format: int64
-          description: ID del usuario propietario de la tarea
-          example: 1
+        fechaActualizacion:
+          type: string
+          format: date-time
+          description: Fecha de vencimiento de la tarea
+          example: "2025-10-13T10:30:00Z"
 
     EstadoResponse:
       type: object
@@ -339,6 +361,27 @@ components:
           description: Descripción del estado
           example: "Tarea creada pero no iniciada"
 
+    ApiErrorCodes:
+      type: string
+      description: Códigos identificatorios de errores
+      enum:
+        - SERVIDOR
+        - TAREA_NO_ENCONTRADA
+        - VALIDACIONES
+        - PETICION
+        - RECURSO_NO_ENCONTRADO
+        - NO_AUTORIZADO
+        - CREDENCIALES_INVALIDAS
+      x-enum-descriptions:
+        SERVIDOR: "Error no controlado"
+        TAREA_NO_ENCONTRADA: "La tarea buscada no se encuentra en los registros"
+        VALIDACIONES: "Petición request contiene errores de validación"
+        PETICION: "Request mal formado"
+        RECURSO_NO_ENCONTRADO: "La url que buscas no se encuentra en el sistema"
+        NO_AUTORIZADO: "No estas autentificado por la app, ingresa en /auth/login"
+        CREDENCIALES_INVALIDAS: "Las credenciales no coinciden con los registros"
+      example: TAREA_NO_ENCONTRADA
+
     ErrorResponse:
       type: object
       properties:
@@ -355,14 +398,12 @@ components:
           type: string
           description: La url consultada
           example: "/auth/login"
-        codigo:
+        codigoHttp:
           type: integer
           description: Código HTTP del error
           example: 400
-        apiErrorCodigo:
-          type: object
-          description: Código personalizado y descriptivo de errores
-          example: CREDENTIALS_NOT_MATCH
+        codigoApi:
+          $ref: "#/components/schemas/ApiErrorCodes"
 
   responses:
     UnauthorizedError:
@@ -372,10 +413,11 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           example:
-            mensaje: "No autorizado"
+            mensaje: "No estas autorizado para realizar esta acción"
             timestamp: "2025-10-13T10:30:00Z"
-            detalles: "Token JWT inválido o expirado"
-            codigo: 401
+            url: "/tareas"
+            codigoHttp: 403
+            codigoApi: NO_AUTORIZADO
 
     NotFoundError:
       description: Recurso no encontrado
@@ -386,8 +428,22 @@ components:
           example:
             mensaje: "Recurso no encontrado"
             timestamp: "2025-10-13T10:30:00Z"
-            detalles: "No se encontró la tarea con ID: 123"
-            codigo: 404
+            url: "/tareas/1"
+            codigoHttp: 404
+            codigoApi: TAREA_NO_ENCONTRADA
+
+    InvalidCredentialsError:
+      description: Credenciales inválidas
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            mensaje: "Las credenciales no coinciden con nuestros registros"
+            timestamp: "2025-10-13T10:30:00Z"
+            url: "/auth/login"
+            codigoHttp: 401
+            codigoApi: CREDENCIALES_INVALIDAS
 
     BadRequestError:
       description: Solicitud inválida o datos incorrectos
@@ -398,5 +454,6 @@ components:
           example:
             mensaje: "Solicitud inválida"
             timestamp: "2025-10-13T10:30:00Z"
-            detalles: "El campo 'titulo' debe tener al menos 3 caracteres"
-            codigo: 400
+            url: "/tareas"
+            codigoHttp: 400
+            codigoApi: VALIDACIONES
