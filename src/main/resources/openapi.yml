@@ -1,0 +1,402 @@
+openapi: 3.0.3
+info:
+  title: API de Gestión de Tareas - NUEVO SPA
+  description: |
+    API RESTful para gestionar tareas con autenticación JWT.
+    
+    **Metodología API First:** Esta API fue diseñada primero mediante OpenAPI,
+    y el código Java fue generado automáticamente desde esta especificación.
+  version: 1.0.0
+  contact:
+    name: Bastián León
+    email: bastianleond@gmail.com
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor de desarrollo
+
+tags:
+  - name: Autenticación
+    description: Endpoints de autenticación y autorización JWT
+  - name: Tareas
+    description: Operaciones CRUD sobre tareas
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Autenticación
+      summary: Autenticar usuario y obtener token JWT
+      description: Valida las credenciales del usuario y devuelve un token JWT para autenticación
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              usuario_normal:
+                summary: Usuario normal
+                value:
+                  email: "user"
+                  password: "user123"
+      responses:
+        '200':
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Solicitud inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tareas:
+    get:
+      tags:
+        - Tareas
+      summary: Listar todas las tareas del usuario
+      description: Obtiene todas las tareas asociadas al usuario autenticado
+      operationId: listarTareas
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de tareas obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TareaResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - Tareas
+      summary: Crear una nueva tarea
+      description: Crea una nueva tarea asociada al usuario autenticado
+      operationId: crearTarea
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TareaRequest'
+            examples:
+              tarea_simple:
+                summary: Tarea simple
+                value:
+                  titulo: "Implementar API First"
+                  descripcion: "Crear archivo openapi.yml y configurar plugin"
+                  estadoId: 1
+              tarea_con_fecha:
+                summary: Tarea con fecha de vencimiento
+                value:
+                  titulo: "Revisar código"
+                  descripcion: "Code review del módulo de seguridad"
+                  estadoId: 1
+                  fechaVencimiento: "2025-10-20"
+      responses:
+        '201':
+          description: Tarea creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TareaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /tareas/{id}:
+    get:
+      tags:
+        - Tareas
+      summary: Obtener una tarea por ID
+      description: Obtiene los detalles de una tarea específica
+      operationId: obtenerTarea
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID de la tarea a obtener
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: Tarea encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TareaResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    put:
+      tags:
+        - Tareas
+      summary: Actualizar una tarea existente
+      description: Actualiza todos los campos de una tarea específica
+      operationId: actualizarTarea
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID de la tarea a actualizar
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TareaRequest'
+      responses:
+        '200':
+          description: Tarea actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TareaResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Tareas
+      summary: Eliminar una tarea
+      description: Elimina permanentemente una tarea del sistema
+      operationId: eliminarTarea
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID de la tarea a eliminar
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '204':
+          description: Tarea eliminada exitosamente
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido del endpoint /auth/login
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: Correo de usuario
+          example: "tucorreo@gmail.com"
+        password:
+          type: string
+          format: password
+          minLength: 6
+          maxLength: 100
+          description: Contraseña del usuario
+          example: "user123"
+
+    LoginResponse:
+      type: object
+      required:
+        - token
+        - tipo
+      properties:
+        token:
+          type: string
+          description: Token JWT para autenticación
+          example: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTY5..."
+        tipo:
+          type: string
+          description: Tipo de token
+          example: "Bearer"
+
+    TareaRequest:
+      type: object
+      required:
+        - titulo
+        - descripcion
+        - estadoId
+      properties:
+        titulo:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Título de la tarea
+          example: "Implementar API First"
+        descripcion:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: Descripción detallada de la tarea
+          example: "Crear el archivo openapi.yml y configurar el plugin de generación de código"
+        estadoId:
+          type: integer
+          format: int64
+          description: ID del estado de la tarea (1=Pendiente, 2=En Progreso, 3=Completada)
+          example: 1
+        fechaVencimiento:
+          type: string
+          format: date
+          description: Fecha de vencimiento de la tarea (opcional)
+          example: "2025-10-20"
+
+    TareaResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único de la tarea
+          example: 1
+        titulo:
+          type: string
+          description: Título de la tarea
+          example: "Implementar API First"
+        descripcion:
+          type: string
+          description: Descripción de la tarea
+          example: "Crear el archivo openapi.yml y configurar el plugin de generación de código"
+        estado:
+          $ref: '#/components/schemas/EstadoResponse'
+        fechaCreacion:
+          type: string
+          format: date-time
+          description: Fecha y hora de creación de la tarea
+          example: "2025-10-13T10:30:00Z"
+        fechaVencimiento:
+          type: string
+          format: date
+          description: Fecha de vencimiento de la tarea
+          example: "2025-10-20"
+        usuarioId:
+          type: integer
+          format: int64
+          description: ID del usuario propietario de la tarea
+          example: 1
+
+    EstadoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID del estado
+          example: 1
+        nombre:
+          type: string
+          description: Nombre del estado
+          example: "Pendiente"
+        descripcion:
+          type: string
+          description: Descripción del estado
+          example: "Tarea creada pero no iniciada"
+
+    ErrorResponse:
+      type: object
+      properties:
+        mensaje:
+          type: string
+          description: Mensaje de error descriptivo
+          example: "Error en la solicitud"
+        timestamp:
+          type: string
+          format: date-time
+          description: Fecha y hora del error
+          example: "2025-10-13T10:30:00Z"
+        url:
+          type: string
+          description: La url consultada
+          example: "/auth/login"
+        codigo:
+          type: integer
+          description: Código HTTP del error
+          example: 400
+        apiErrorCodigo:
+          type: object
+          description: Código personalizado y descriptivo de errores
+          example: CREDENTIALS_NOT_MATCH
+
+  responses:
+    UnauthorizedError:
+      description: Token JWT no válido, expirado o ausente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            mensaje: "No autorizado"
+            timestamp: "2025-10-13T10:30:00Z"
+            detalles: "Token JWT inválido o expirado"
+            codigo: 401
+
+    NotFoundError:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            mensaje: "Recurso no encontrado"
+            timestamp: "2025-10-13T10:30:00Z"
+            detalles: "No se encontró la tarea con ID: 123"
+            codigo: 404
+
+    BadRequestError:
+      description: Solicitud inválida o datos incorrectos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            mensaje: "Solicitud inválida"
+            timestamp: "2025-10-13T10:30:00Z"
+            detalles: "El campo 'titulo' debe tener al menos 3 caracteres"
+            codigo: 400
