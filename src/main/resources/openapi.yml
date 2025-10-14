@@ -48,14 +48,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
         '401':
           $ref: '#/components/responses/InvalidCredentialsError'
-        '400':
-          description: Solicitud inválida
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+
 
   /tareas:
     get:
@@ -65,7 +62,7 @@ paths:
       description: Obtiene todas las tareas asociadas al usuario autenticado
       operationId: listarTareas
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         '200':
           description: Lista de tareas obtenida exitosamente
@@ -85,7 +82,7 @@ paths:
       description: Crea una nueva tarea asociada al usuario autenticado
       operationId: crearTarea
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         required: true
         content:
@@ -125,7 +122,7 @@ paths:
       description: Obtiene los detalles de una tarea específica
       operationId: obtenerTarea
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -142,10 +139,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TareaResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
         '403':
           $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
     put:
       tags:
@@ -154,7 +151,7 @@ paths:
       description: Actualiza todos los campos de una tarea específica
       operationId: actualizarTarea
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -177,12 +174,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TareaResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+
         '400':
           $ref: '#/components/responses/BadRequestError'
-        '401':
+        '403':
           $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
     delete:
       tags:
@@ -191,7 +189,7 @@ paths:
       description: Elimina permanentemente una tarea del sistema
       operationId: eliminarTarea
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -204,10 +202,11 @@ paths:
       responses:
         '204':
           description: Tarea eliminada exitosamente
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           $ref: '#/components/responses/NotFoundError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+
 
 components:
   securitySchemes:
@@ -215,7 +214,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: | 
+      description: |
         Token JWT obtenido del endpoint /auth/login.
         Ejemplo: Bearer eyJhbGciOiJIUzUxMiJ9...
 
@@ -229,7 +228,7 @@ components:
         email:
           type: string
           minLength: 3
-          maxLength: 50
+          maxLength: 100
           description: Correo de usuario
           example: "tucorreo@gmail.com"
         password:
@@ -404,6 +403,14 @@ components:
           example: 400
         codigoApi:
           $ref: "#/components/schemas/ApiErrorCodes"
+        validaciones:
+          type: object
+          description: Mapa de errores de validación por campo
+          additionalProperties:
+            type: string
+          example:
+            email: "No es un email válido"
+            password: "Es requerida"
 
   responses:
     UnauthorizedError:
@@ -418,6 +425,7 @@ components:
             url: "/tareas"
             codigoHttp: 403
             codigoApi: NO_AUTORIZADO
+            validaciones: null
 
     NotFoundError:
       description: Recurso no encontrado
@@ -431,6 +439,7 @@ components:
             url: "/tareas/1"
             codigoHttp: 404
             codigoApi: TAREA_NO_ENCONTRADA
+            validaciones: null
 
     InvalidCredentialsError:
       description: Credenciales inválidas
@@ -444,9 +453,10 @@ components:
             url: "/auth/login"
             codigoHttp: 401
             codigoApi: CREDENCIALES_INVALIDAS
+            validaciones: null
 
     BadRequestError:
-      description: Solicitud inválida o datos incorrectos
+      description: Solicitud inválida
       content:
         application/json:
           schema:
@@ -457,3 +467,6 @@ components:
             url: "/tareas"
             codigoHttp: 400
             codigoApi: VALIDACIONES
+            validaciones:
+              email: "Debe ser una dirección de correo válida"
+              password: "No debe estar vacío"
