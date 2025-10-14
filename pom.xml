@@ -163,7 +163,6 @@
                                 <java17>true</java17>
                                 <useJakartaEe>true</useJakartaEe>
                                 <delegatePattern>false</delegatePattern>
-                                <additionalModelTypeAnnotations>@lombok.Builder @lombok.NoArgsConstructor @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
                             </configOptions>
                         </configuration>
                     </execution>
