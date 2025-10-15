@@ -1,14 +1,17 @@
 package com.nuevospa.taskmanager.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.nuevospa.taskmanager.dto.response.ErrorResponse;
 import com.nuevospa.taskmanager.enums.ApiErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +49,55 @@ public class GeneralExceptionHandler {
                 .build();
 
         return ResponseEntity.status(ex.getHttpStatusCode()).body(error);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleJsonParseError(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+
+        String mensajeDetallado = "JSON mal formado";
+        Map<String, String> validaciones = new HashMap<>();
+
+        Throwable causaRaiz = ex.getMostSpecificCause();
+
+        // FECHAS
+        if (ex.getCause() instanceof InvalidFormatException) {
+            InvalidFormatException ife = (InvalidFormatException) ex.getCause();
+
+            if (ife.getTargetType() != null && ife.getTargetType().equals(LocalDate.class)) {
+                String campoConError = ife.getPath().isEmpty() ? "fecha"
+                        : ife.getPath().get(0).getFieldName();
+                String valorInvalido = ife.getValue().toString();
+
+                mensajeDetallado = "Formato de fecha inválido";
+                validaciones.put(campoConError,
+                        String.format("Fecha inválida '%s'. Formato esperado: YYYY-MM-DD (ejemplo: 2025-10-20)",
+                                valorInvalido));
+
+            } else {
+                // OTROS
+                String campoConError = ife.getPath().isEmpty() ? "campo"
+                        : ife.getPath().get(0).getFieldName();
+                validaciones.put(campoConError,
+                        String.format("Valor inválido. Tipo esperado: %s",
+                                ife.getTargetType().getSimpleName()));
+            }
+        } else if (causaRaiz.getMessage().contains("JSON")) {
+            mensajeDetallado = "Error de sintaxis JSON";
+            validaciones.put("json", "Revisa la estructura del JSON enviado");
+        }
+
+        ErrorResponse error = ErrorResponse.builder()
+                .mensaje(mensajeDetallado)
+                .timestamp(OffsetDateTime.now())
+                .url(request.getRequestURI())
+                .codigoHttp(HttpStatus.BAD_REQUEST.value())
+                .codigoApi(ApiErrorCode.PETICION)
+                .validaciones(validaciones.isEmpty() ? null : validaciones)
+                .build();
+
+        return ResponseEntity.badRequest().body(error);
     }
 
 }

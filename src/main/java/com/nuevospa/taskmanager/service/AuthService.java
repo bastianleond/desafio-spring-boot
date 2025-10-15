@@ -10,6 +10,7 @@ import com.nuevospa.taskmanager.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UsuarioMapper usuarioMapper;
 
+    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository.buscarPorEmail(request.email())
                 .orElseThrow(() -> new CredentialNotMatchException("Las credenciales no coinciden con nuestros registros"));

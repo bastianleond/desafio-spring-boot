@@ -1,6 +1,5 @@
 package com.nuevospa.taskmanager.repository.impl;
 
-import com.nuevospa.taskmanager.entity.Tarea;
 import com.nuevospa.taskmanager.entity.Usuario;
 import com.nuevospa.taskmanager.repository.UsuarioRepository;
 import com.nuevospa.taskmanager.repository.impl.jpa.UsuarioJPARepository;
