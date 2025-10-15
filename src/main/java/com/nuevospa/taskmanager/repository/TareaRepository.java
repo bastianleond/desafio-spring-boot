@@ -12,4 +12,8 @@ public interface TareaRepository {
     List<Tarea> buscarPorUsuarioId(Long usuarioId);
 
     Optional<Tarea> buscarPorIdYPorUsuarioId(Long tareaId, Long usuarioId);
+
+    Optional<Tarea> buscarPorId(Long id);
+
+    void eliminar(Tarea tarea);
 }

@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -37,13 +38,30 @@ public class GeneralExceptionHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(
+            NoResourceFoundException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .mensaje("Ruta no se encuentra")
+                .timestamp(OffsetDateTime.now())
+                .url(request.getRequestURI())
+                .codigoHttp(HttpStatus.NOT_FOUND.value())
+                .codigoApi(ApiErrorCode.RECURSO_NO_ENCONTRADO)
+                .validaciones(null)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(BaseApiException.class)
     public ResponseEntity<ErrorResponse> handleBaseApiException(BaseApiException ex, HttpServletRequest request) {
         ErrorResponse error = ErrorResponse.builder()
                 .mensaje(ex.getMessage())
                 .timestamp(OffsetDateTime.now())
                 .url(request.getRequestURI())
-                .codigoHttp(HttpStatus.BAD_REQUEST.value())
+                .codigoHttp(ex.getHttpStatusCode().value())
                 .codigoApi(ex.getApiErrorCode())
                 .validaciones(null)
                 .build();

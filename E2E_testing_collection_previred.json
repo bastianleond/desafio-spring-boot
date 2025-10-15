@@ -1,0 +1,410 @@
+{
+	"info": {
+		"_postman_id": "da979b8d-8115-4da9-8c9e-baad3fe28d20",
+		"name": "End-to-End Tests",
+		"description": "Encontrará una serie de testing directamente a los endpoint solicitados por el desafio, consideraciones:  \n\n- El sistema al iniciar carga 2 usuarios y 4 estados de tareas, existe un usuario activo y otro no.\n    \n- Debe usar el endpoint de /auth/login en primera instancia para obtener el bearer token\n    \n- El token lo debe cambiar en la sección de \"Variables\", debe cambiar el atributo \"authToken\"\n    \n- Todo lo de la carpeta \"TAREAS\" requiere autentificación",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3428792",
+		"_collection_link": "https://dev555-7852.postman.co/workspace/Previred-desafio~327432c8-2ef7-4d57-bdad-692f559891f9/collection/3428792-da979b8d-8115-4da9-8c9e-baad3fe28d20?action=share&source=collection_link&creator=3428792"
+	},
+	"item": [
+		{
+			"name": "AUTH",
+			"item": [
+				{
+					"name": "Test Valid Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"bastianleond@gmail.com\",\n    \"password\": \"user123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Invalid Login (Business)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"noexiste@email.com\",\n    \"password\": \"user123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Invalid Login (Request)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"email_invalido\",\n    \"password\": \"no_password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "TAREAS",
+			"item": [
+				{
+					"name": "Test obtener tareas",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tareas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tareas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Buscar por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tareas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tareas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Crear tarea",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titulo\": \"Crear documentación openapi.yml\",\n    \"descripcion\": \"Crear archivo de documentación con open api, luego exportarla\",\n    \"estadoId\": 1,\n    \"fechaVencimiento\": \"2025-10-14\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tareas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tareas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test actualizar tarea",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titulo\": \"Crear documentación openapi.yml\",\n    \"descripcion\": \"Crear archivo de documentación con open api, luego exportarla\",\n    \"estadoId\": 2,\n    \"fechaVencimiento\": \"2025-10-15\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tareas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tareas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test invalid actualizar tarea  (business)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titulo\": \"Crear documentación openapi.yml\",\n    \"descripcion\": \"Crear archivo de documentación con open api, luego exportarla\",\n    \"estadoId\": 99,\n    \"fechaVencimiento\": \"2025-10-15\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tareas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tareas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test invalid actualizar tarea  (Request)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titulo\": \"Crear documentación openapi.yml\",\n    \"descripcion\": \"Crear archivo de documentación con open api, luego exportarla\",\n    \"estadoId\": -23,\n    \"fechaVencimiento\": \"2025-10-15\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tareas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tareas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test eliminar tarea",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tareas/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tareas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Pasos para poder realizar los test, ya que estas rutas estan con seguridad de JWT.\n\n1. Autenticarse y generar token en /auth/login usando como email: [bastianleond@gmail.com](https://mailto:bastianleond@gmail.com) y password: user123 (existe un endpoint listo)\n    \n2. Si todo salio correctamente este les devolverá un token, guardar ese token.\n    \n3. Colocar token en la configuración del la collection \"End-to-End Tests\", ir a \"Variables\" y cambiar el valor de authToken por el token generado en el paso Nº1.\n    \n4. Todas las demás ruta tendrán la herencia de este header. Este valor esta inyectado directamente en el Authorization Bearer Type.",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{authToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://template.postman-echo.com"
+		},
+		{
+			"key": "authToken",
+			"value": "OMpqVWAH.UC80wyXTtPwhDgAUdCTx6"
+		}
+	]
+}

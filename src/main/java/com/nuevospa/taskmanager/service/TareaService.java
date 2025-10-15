@@ -61,11 +61,11 @@ public class TareaService {
 
 
     @Transactional
-    public TareaResponse ActualizarTarea(TareaRequest request, Long tareaId) {
+    public TareaResponse actualizarTarea(TareaRequest request, Long tareaId) {
         Usuario usuarioAutenticado = authenticationHelper.getUsuarioAutenticado();
 
-        Tarea tareaExistente = tareaRepository.buscarPorIdYPorUsuarioId(tareaId, usuarioAutenticado.getId())
-                .orElseThrow(() -> new RecursoNotFoundException("La tarea no se encuentra o no esta asociada al usuario"));
+        Tarea tareaExistente = tareaRepository.buscarPorId(tareaId)
+                .orElseThrow(() -> new RecursoNotFoundException("Tarea no encontrada con ID: "+ tareaId));
 
         if (!tareaExistente.getUsuario().getId().equals(usuarioAutenticado.getId())) {
             throw new UnauthorizedException("No tienes permiso para actualizar esta tarea");
@@ -84,6 +84,20 @@ public class TareaService {
         return tareaMapper.toResponse(tareaActualizada);
     }
 
+    @Transactional
+    public void eliminarTarea(Long id) {
+
+        Usuario usuarioAutenticado = authenticationHelper.getUsuarioAutenticado();
+
+        Tarea tareaEncontrada = tareaRepository.buscarPorId(id)
+                .orElseThrow(() -> new RecursoNotFoundException("Tarea no encontrada con ID: " + id));
+
+        if (!tareaEncontrada.getUsuario().getId().equals(usuarioAutenticado.getId())) {
+            throw new UnauthorizedException("No tienes permiso para eliminar esta tarea");
+        }
+
+        tareaRepository.eliminar(tareaEncontrada);
+    }
 
 
 }

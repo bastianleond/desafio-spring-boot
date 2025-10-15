@@ -30,4 +30,14 @@ public class TareaRepositoryJPAImpl implements TareaRepository {
         return tareaJPARepository.findByIdAndUsuarioId(tareaId, usuarioId);
     }
 
+    @Override
+    public Optional<Tarea> buscarPorId(Long id) {
+        return tareaJPARepository.findById(id);
+    }
+
+    @Override
+    public void eliminar(Tarea tarea) {
+        tareaJPARepository.delete(tarea);
+    }
+
 }

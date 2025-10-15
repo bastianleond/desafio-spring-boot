@@ -5,9 +5,7 @@ import com.nuevospa.taskmanager.dto.response.TareaResponse;
 import com.nuevospa.taskmanager.service.TareaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.encrypt.RsaAlgorithm;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,7 +42,16 @@ public class TareaController {
             @PathVariable Long id,
             @Valid @RequestBody TareaRequest request
     ) {
-        return ResponseEntity.ok().body(tareaService.ActualizarTarea(request, id));
+        return ResponseEntity.ok().body(tareaService.actualizarTarea(request, id));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarTarea(
+            @PathVariable Long id
+    ) {
+        tareaService.eliminarTarea(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }
